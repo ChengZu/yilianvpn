@@ -280,7 +280,7 @@ public class TcpProxy implements Runnable {
 			state = LAST_ACK;
 			//System.out.printf("TcpProxy(%d) CLOSE_WAIT succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) CLOSE_WAIT failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
+			System.out.printf("TcpProxy(%d) CLOSE_WAIT failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
@@ -293,7 +293,7 @@ public class TcpProxy implements Runnable {
 			state = CLOSED;
 			//System.out.printf("TcpProxy(%d) LAST_ACK succeed, 关闭连接成功.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) LAST_ACK failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
+			System.out.printf("TcpProxy(%d) LAST_ACK failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
@@ -314,7 +314,7 @@ public class TcpProxy implements Runnable {
 			state = FIN_WAIT_2;
 			//System.out.printf("TcpProxy(%d) FIN_WAIT_1 succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) FIN_WAIT_1 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
+			System.out.printf("TcpProxy(%d) FIN_WAIT_1 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
@@ -324,12 +324,12 @@ public class TcpProxy implements Runnable {
 		int seq = tcpHeader.getAckID();
 		int ack = tcpHeader.getSeqID();
 		if (seq == mySeq && ack == myAck) {
-			updateTCPBuffer(headerBytes, (byte) TCPHeader.ACK, mySeq, myAck, 0);
+			updateTCPBuffer(headerBytes, (byte) TCPHeader.ACK, mySeq, (myAck + 1), 0);
 			client.sendToClient(headerBytes, 0, HEADER_SIZE);
 			state = TIME_WAIT;
 			//System.out.printf("TcpProxy(%d) FIN_WAIT_2 succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) FIN_WAIT_2 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
+			System.out.printf("TcpProxy(%d) FIN_WAIT_2 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
