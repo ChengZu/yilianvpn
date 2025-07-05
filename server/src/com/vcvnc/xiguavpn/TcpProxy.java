@@ -265,36 +265,35 @@ public class TcpProxy implements Runnable {
 		myAck = tcpHeader.getSeqID() + 1;
 		updateTCPBuffer(headerBytes, flags, mySeq, myAck, 0);
 		client.sendToClient(headerBytes, 0, HEADER_SIZE);
-		mySeq += 1;
 		state = CLOSE_WAIT;
+		processCLOSEWAITACKPacket(packet);
 	}
 	
 	public void processCLOSEWAITACKPacket(byte[] packet) {
 		IPHeader ipHeader = new IPHeader(packet, 0);
 		TCPHeader tcpHeader = new TCPHeader(packet, ipHeader.getHeaderLength());
-		int sequenceNumber = tcpHeader.getSeqID();
-		int acknowledgementNumber = tcpHeader.getAckID();
-		if (sequenceNumber == myAck && acknowledgementNumber == mySeq) {
+		int seq = tcpHeader.getAckID() - 1;
+		int ack = tcpHeader.getSeqID() + 1;
+		if (ack == myAck && seq == mySeq) {
 			updateTCPBuffer(headerBytes, (byte) (TCPHeader.FIN | TCPHeader.ACK), mySeq, myAck, 0);
 			client.sendToClient(headerBytes, 0, HEADER_SIZE);
-			mySeq += 1;
 			state = LAST_ACK;
 			//System.out.printf("TcpProxy(%d) CLOSE_WAIT succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) CLOSE_WAIT failed, seq %d:%d, ack %d:%d.\n", id, sequenceNumber, myAck, acknowledgementNumber, mySeq);
+			//System.out.printf("TcpProxy(%d) CLOSE_WAIT failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
 	public void processLASTACKPacket(byte[] packet) {
 		IPHeader ipHeader = new IPHeader(packet, 0);
 		TCPHeader tcpHeader = new TCPHeader(packet, ipHeader.getHeaderLength());
-		int sequenceNumber = tcpHeader.getSeqID();
-		int acknowledgementNumber = tcpHeader.getAckID();
-		if (sequenceNumber == myAck && acknowledgementNumber == mySeq) {
+		int seq = tcpHeader.getAckID() - 1;
+		int ack = tcpHeader.getSeqID();
+		if (ack == myAck && seq == mySeq) {
 			state = CLOSED;
 			//System.out.printf("TcpProxy(%d) LAST_ACK succeed, 关闭连接成功.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) LAST_ACK failed, seq %d:%d, ack %d:%d.\n", id, sequenceNumber, myAck, acknowledgementNumber, mySeq);
+			//System.out.printf("TcpProxy(%d) LAST_ACK failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
@@ -309,30 +308,28 @@ public class TcpProxy implements Runnable {
 	public void processFINWAIT1Packet(byte[] packet) {
 		IPHeader ipHeader = new IPHeader(packet, 0);
 		TCPHeader tcpHeader = new TCPHeader(packet, ipHeader.getHeaderLength());
-		int sequenceNumber = tcpHeader.getSeqID();
-		int acknowledgementNumber = tcpHeader.getAckID();
-		if (sequenceNumber == myAck && acknowledgementNumber == mySeq) {
-			updateTCPBuffer(headerBytes, (byte) TCPHeader.ACK, mySeq, myAck, 0);
-			client.sendToClient(headerBytes, 0, HEADER_SIZE);
+		int seq = tcpHeader.getAckID();
+		int ack = tcpHeader.getSeqID();
+		if (seq == mySeq && ack == myAck) {
 			state = FIN_WAIT_2;
 			//System.out.printf("TcpProxy(%d) FIN_WAIT_1 succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) FIN_WAIT_1 failed, seq %d:%d, ack %d:%d.\n", id, sequenceNumber, myAck, acknowledgementNumber, mySeq);
+			//System.out.printf("TcpProxy(%d) FIN_WAIT_1 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
 	public void processFINWAIT2Packet(byte[] packet) {
 		IPHeader ipHeader = new IPHeader(packet, 0);
 		TCPHeader tcpHeader = new TCPHeader(packet, ipHeader.getHeaderLength());
-		int sequenceNumber = tcpHeader.getSeqID();
-		int acknowledgementNumber = tcpHeader.getAckID();
-		if (sequenceNumber == myAck && acknowledgementNumber == mySeq) {
+		int seq = tcpHeader.getAckID();
+		int ack = tcpHeader.getSeqID();
+		if (seq == mySeq && ack == myAck) {
 			updateTCPBuffer(headerBytes, (byte) TCPHeader.ACK, mySeq, myAck, 0);
 			client.sendToClient(headerBytes, 0, HEADER_SIZE);
 			state = TIME_WAIT;
 			//System.out.printf("TcpProxy(%d) FIN_WAIT_2 succeed.\n", id);
 		} else {
-			//System.out.printf("TcpProxy(%d) FIN_WAIT_2 failed, seq %d:%d, ack %d:%d.\n", id, sequenceNumber, myAck, acknowledgementNumber, mySeq);
+			//System.out.printf("TcpProxy(%d) FIN_WAIT_2 failed, seq %d:%d, ack %d:%d.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 
