@@ -1,7 +1,18 @@
 # 西瓜vpn
-
+大家发现BUG或知道修复BUG,欢迎回复
 # 如何配置服务器（Ubuntu）
+##C++版
+1.上传程序到服务器
+2.编译程序
+```  
+ make
+```  
+3.运行程序
+```  
+ ./vpn.out 80
+```
 
+##java版
 1.安装jdk
 ```  
 apt install openjdk-11-jdk-headless
