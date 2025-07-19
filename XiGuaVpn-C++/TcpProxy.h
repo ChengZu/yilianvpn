@@ -91,7 +91,7 @@ public:
 	}
 	
 	bool finishClose(){
-		return state == TIME_WAIT || state == CLOSED;
+		return state == CLOSED;
 	}
 	
 	int sendToServer(char* bytes, int size, int offset = 0, int retry = 2){
@@ -138,7 +138,7 @@ public:
 		CommonMethods::arraycopy(bytes, offset, data, 0, len);
 		int res = clientSocket->socketSend(data, len);
 		delete[] data;
-		//Èç¹û·¢ËÍÒì³££¬·ÅÆúÕâ¸öTCPÁ¬½Ó 
+		//å¦‚æœå‘é€å¼‚å¸¸ï¼Œæ”¾å¼ƒè¿™ä¸ªTCPè¿æ¥ 
 		if(res == 0){
 			close();
 			state = CLOSED;
@@ -168,7 +168,7 @@ public:
 		int flags = tcpHeader.getFlag();
 		if(newTcpProxy && (flags & TCPHeader::SYN) != TCPHeader::SYN) {
 			if((flags & TCPHeader::RST) != TCPHeader::RST){
-				updateTCPBuffer(headerBytes, (byte)TCPHeader::RST, mySeq, myAck, 0);
+				updateTCPBuffer(headerBytes, (char)TCPHeader::RST, mySeq, myAck, 0);
 				sendToClient(headerBytes, TcpProxy::HEADER_SIZE);
 			}
 			destroy();
@@ -205,7 +205,7 @@ public:
 		if((flags & TCPHeader::URG) == TCPHeader::URG){
 			processURGPacket(packet);
 		}else{
-			printf("Client(%ld) tcpProxy(%s:%d) Î´´¦Àí±êÖ¾Î»%d{%s}.\n", id, CommonMethods::ipIntToString((int)ipHeader.getDestinationIP()).c_str(), tcpHeader.getDestinationPort(), flags, tcpHeader.toString().c_str());
+			printf("Client(%ld) tcpProxy(%s:%d) æœªå¤„ç†æ ‡å¿—ä½%d{%s}.\n", id, CommonMethods::ipIntToString((int)ipHeader.getDestinationIP()).c_str(), tcpHeader.getDestinationPort(), flags, tcpHeader.toString().c_str());
 		}
 	}
 	
@@ -231,9 +231,6 @@ public:
 		case LAST_ACK:
 			processLASTACKPacket(packet);
 			break;
-		case FIN_WAIT_1:
-		case FIN_WAIT_2:
-		case TIME_WAIT:
 		case CLOSED:
 			printf("TcpProxy(%ld%s) Connect closed, state=%d.\n", id, toString().c_str(), state);
 			break;
@@ -262,32 +259,32 @@ public:
 		int dataSize = ipHeader.getTotalLength() - ipHeader.getHeaderLength() - tcpHeader.getHeaderLength();
 		int sequenceNumber = tcpHeader.getSeqID();	
 		if (sequenceNumber == myAck) { 
-			//printf("TcpProxy(%ld) ĞòÁĞºÅÆ¥Åä.\n", id);
+			//printf("TcpProxy(%ld) åºåˆ—å·åŒ¹é….\n", id);
 			if (dataSize > 0) {
 				char* data = new char[dataSize];
 				CommonMethods::arraycopy(packet, (ipHeader.getHeaderLength() + tcpHeader.getHeaderLength()), data, 0, dataSize);
 				sendToServer(data, dataSize);
 				delete[] data;
-				//ÏÂÒ»¸öĞòÁĞºÅ
+				//ä¸‹ä¸€ä¸ªåºåˆ—å·
 				myAck += dataSize;
 				updateTCPBuffer(headerBytes, TCPHeader::ACK, mySeq, myAck, 0);
-				//·¢ËÍÊı¾İÊÕµ½ACK°ü 
+				//å‘é€æ•°æ®æ”¶åˆ°ACKåŒ… 
 				sendToClient(headerBytes, TcpProxy::HEADER_SIZE);
 			}
 		} else if (sequenceNumber < myAck) {	
 			int nextSeq = sequenceNumber + dataSize;
 			if (nextSeq > myAck) {
-				printf("TcpProxy(%ld) ACK seq %u max %u, Êı¾İ¶à°ü²»´¦Àí.\n", id, nextSeq, myAck);
+				printf("TcpProxy(%ld) ACK seq %u max %u, æ•°æ®å¤šåŒ…ä¸å¤„ç†.\n", id, nextSeq, myAck);
 			} else {
-				//printf("TcpProxy(%ld) ACK seq %u min %u, Êı¾İÖØ´«²»´¦Àí.\n", id, nextSeq, myAck);
+				//printf("TcpProxy(%ld) ACK seq %u min %u, æ•°æ®é‡ä¼ ä¸å¤„ç†.\n", id, nextSeq, myAck);
 			}
 		} else {
-			printf("TcpProxy(%ld) ACK seq %u max %u, Êı¾İÂ©°ü²»´¦Àí.\n", id, sequenceNumber, myAck);
+			printf("TcpProxy(%ld) ACK seq %u max %u, æ•°æ®æ¼åŒ…ä¸å¤„ç†.\n", id, sequenceNumber, myAck);
 		}
 	}
 	
 	void processRSTPacket(char* packet) {
-		//printf("TcpProxy(%ld) RST, ¹Ø±ÕÁ¬½Ó.\n", id);
+		//printf("TcpProxy(%ld) RST, å…³é—­è¿æ¥.\n", id);
 		close();
 	}
 	
@@ -299,26 +296,8 @@ public:
 
 	}
 
-	 bool checkIsOnCloseing(){
-	 	bool ret = false;
-	 	if(finishClose()) {
-	 		ret = true;
-	 		printf("TcpProxy(%ld) Òì³£²Ù×÷, ÒÑ¾­¹Ø±Õ, state=%d.\n", id, state);
-			}else if(state == FIN_WAIT_1 || state == FIN_WAIT_2) {
-				ret = true;
-				printf("TcpProxy(%ld) Òì³£²Ù×÷, ÕıÔÚÖ÷¶¯¹Ø±Õ, state=%d.\n", id, state);
-			}else if(state == CLOSE_WAIT || state == LAST_ACK){
-				ret = true;
-				printf("TcpProxy(%ld) Òì³£²Ù×÷, ÕıÔÚ±»¶¯¹Ø±Õ, state=%d.\n", id, state);
-			}else{
-				close();
-		}
-		return ret;    
-	}
-
 	void processFINPacket(char* packet) {
-		//printf("TcpProxy(%ld) ¿ªÊ¼±»¶¯¹Ø±Õ, state=%d.\n", id, state);
-		//if(checkIsOnCloseing()) return;
+		//printf("TcpProxy(%ld) å¼€å§‹è¢«åŠ¨å…³é—­, state=%d.\n", id, state);
 		IPHeader ipHeader = IPHeader(packet, 0);
 		TCPHeader tcpHeader = TCPHeader(packet, ipHeader.getHeaderLength());
 		updateTCPBuffer(headerBytes, TCPHeader::ACK, mySeq, myAck, 0);
@@ -340,14 +319,14 @@ public:
 		int ack = tcpHeader.getSeqID() - 1;
 		if (seq == mySeq && ack == myAck) {
 			state = CLOSED;
-			//printf("TcpProxy(%ld) LAST_ACK succeed, ¹Ø±ÕÁ¬½Ó³É¹¦, seq %u:%u, ack %u:%u.\n", id, seq, mySeq, ack, myAck);
+			//printf("TcpProxy(%ld) LAST_ACK succeed, å…³é—­è¿æ¥æˆåŠŸ, seq %u:%u, ack %u:%u.\n", id, seq, mySeq, ack, myAck);
 		} else {
-			printf("TcpProxy(%ld) LAST_ACK failed, ¶ÓÁĞºÅ²»Æ¥Åä£¬seq %u:%u, ack %u:%u.\n", id, seq, mySeq, ack, myAck);
+			printf("TcpProxy(%ld) LAST_ACK failed, é˜Ÿåˆ—å·ä¸åŒ¹é…ï¼Œseq %u:%u, ack %u:%u.\n", id, seq, mySeq, ack, myAck);
 		}
 	}
 	
 	void disConnectClient() {
-		//printf("TcpProxy(%ld) ¿ªÊ¼Ö÷¶¯¹Ø±Õ, state=%d.\n", id, state);
+		//printf("TcpProxy(%ld) å¼€å§‹ä¸»åŠ¨å…³é—­, state=%d.\n", id, state);
 		close();
 		updateTCPBuffer(headerBytes, TCPHeader::RST, mySeq, myAck, 0);
 		sendToClient(headerBytes, TcpProxy::HEADER_SIZE);
@@ -386,7 +365,7 @@ public:
 			return false;
 		}
 
-		//´Ó·şÎñÆ÷½ÓÊÕÊı¾İ 
+		//ä»æœåŠ¡å™¨æ¥æ”¶æ•°æ® 
 		char* bytes = new char[Config::MUTE - TcpProxy::HEADER_SIZE];
 		int size = destSocket.socketRecv(bytes, Config::MUTE - TcpProxy::HEADER_SIZE);
 		if (size > 0) {
@@ -401,7 +380,7 @@ public:
 		}else if(size == 0){
 			disConnectClient();
 			ret = true;
-		}
+		}	
 		delete[] bytes;
 		return ret;
 	}
@@ -446,23 +425,23 @@ public:
 	}
 
 private:
-	//¿Í»§¶ËÌ×½Ó×Ö 
+	//å®¢æˆ·ç«¯å¥—æ¥å­— 
 	Socket* clientSocket;
-	//ÓëÄ¿±ê·şÎñÆ÷µÄTCPÌ×½Ó×Ö
+	//ä¸ç›®æ ‡æœåŠ¡å™¨çš„TCPå¥—æ¥å­—
 	Socket destSocket;
-	//Í·²¿ĞÅÏ¢
+	//å¤´éƒ¨ä¿¡æ¯
 	char* headerBytes;
-	//Ô´ip
+	//æºip
 	unsigned int srcIp;
-	//Ô´¶Ë¿Ú
+	//æºç«¯å£
 	unsigned short srcPort;
-	//Ä¿±êip
+	//ç›®æ ‡ip
 	unsigned int destIp;
-	//Ä¿±ê¶Ë¿Ú
+	//ç›®æ ‡ç«¯å£
 	unsigned short destPort;
-	//·¢ËÍ¸ø¿Í»§¶ËÊı¾İ¶ÓÁĞºÅ
+	//å‘é€ç»™å®¢æˆ·ç«¯æ•°æ®é˜Ÿåˆ—å·
 	unsigned int mySeq;
-	//ÊÕµ½´¦ÀíÍê³É¿Í»§¶ËÊı¾İ¶ÓÁĞºÅ
+	//æ”¶åˆ°å¤„ç†å®Œæˆå®¢æˆ·ç«¯æ•°æ®é˜Ÿåˆ—å·
 	unsigned int myAck;
 	
 	static int identification;
@@ -470,26 +449,23 @@ private:
 	static const int ESTABLISHED = 2;
 	static const int CLOSE_WAIT = 3;
 	static const int LAST_ACK = 4;
-	static const int FIN_WAIT_1 = 5;
-	static const int FIN_WAIT_2 = 6;
-	static const int TIME_WAIT = 7;
-	static const int CLOSED = 8;
-	//IP/TCPÍ¨ĞÅ×´Ì¬ 
+	static const int CLOSED = 5;
+	//IP/TCPé€šä¿¡çŠ¶æ€ 
 	int state; 
-	//´úÀí½ÓÊÕÊı¾İÈÎÎñ 
+	//ä»£ç†æ¥æ”¶æ•°æ®ä»»åŠ¡ 
 	Loop iloop;
 	
-	//Î´½¨Á¢Á¬½Ó½ÓÊÕµ½µÄÊı¾İ°üÈİÆ÷ 
+	//æœªå»ºç«‹è¿æ¥æ¥æ”¶åˆ°çš„æ•°æ®åŒ…å®¹å™¨ 
 	std::vector<CachePacket> cachePackets;
-	//ÊÇ·ñ¹Ø±Õ 
+	//æ˜¯å¦å…³é—­ 
 	bool iClose;
-	//ÓëÄ¿±ê·şÎñÆ÷µÄTCPÌ×½Ó×ÖÊÇ·ñ½¨Á¢Á¬½Ó 
+	//ä¸ç›®æ ‡æœåŠ¡å™¨çš„TCPå¥—æ¥å­—æ˜¯å¦å»ºç«‹è¿æ¥ 
 	bool connected;
-	//´úÀí´´½¨Ê±¼ä 
+	//ä»£ç†åˆ›å»ºæ—¶é—´ 
 	long createTime;
-	//×îºóË¢ĞÂÊ±¼ä 
+	//æœ€ååˆ·æ–°æ—¶é—´ 
 	long lastRefreshTime;
-	//³ö´íÔ­Òò
+	//å‡ºé”™åŸå› 
 	char* errorMsg; 
 };
 int TcpProxy::identification = 1;
