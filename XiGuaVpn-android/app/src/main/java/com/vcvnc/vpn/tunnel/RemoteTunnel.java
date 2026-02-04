@@ -114,7 +114,7 @@ public class RemoteTunnel implements Runnable {
 
         IPHeader IpHeader = new IPHeader(bytes, 0);
         int totalLength = IpHeader.getTotalLength();
-        if(totalLength < 0 || totalLength > ProxyConfig.MUTE){
+        if(totalLength <= 0 || totalLength > ProxyConfig.MUTE || size > (2 * ProxyConfig.MUTE)){
             close(vpnService.getString(R.string.rev_bad_length_packet));
             return;
         }
