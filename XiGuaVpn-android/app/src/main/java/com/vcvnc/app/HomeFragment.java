@@ -78,10 +78,12 @@ public class HomeFragment extends Fragment {
             if(!isRunning && !onStart){
                 if(getPreferenceValue("new-install").equals("0")){
                     writeToPreference("new-install", "no");
+                    startVPN();
+                    closeVpn();
                 }else{
                     onStart = true;
+                    startVPN();
                 }
-                startVPN();
                 updateUI();
             }
         });
