@@ -12,13 +12,13 @@
 ```  
 3.运行程序
 ```  
- ./vpn.out 80
+ ./vpn.out 4430
 ```
 
 # 如何安装客户端
 
 1.将build/XiGuaVpn.apk 拷贝到android手机上安装
 
-2.ip选项填服务器IP地址, port填服务器端口(80), dns服务器地区dns
+2.ip选项填服务器IP地址, port填服务器端口(4430), dns服务器地区dns
 
 3.点击启动
