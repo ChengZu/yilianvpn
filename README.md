@@ -8,7 +8,7 @@
 
 3.修复用户验证bug
 
-4.修复过期代理清除bug(清除时未关闭)
+4.修复过期代理清除bug(清除时socket未关闭)
 
 
 2025.08 修复tcpproxy初始化连接错误
@@ -30,7 +30,7 @@ Dev-C++ IDE 编译运行
 
 # 如何安装客户端
 
-1.将build/XiGuaVpn.apk 拷贝到android手机上安装
+1.将build/xiguavpn-release.apk 拷贝到android手机上安装
 
 2.ip选项填服务器IP地址, port填服务器端口(4430), dns服务器地区dns
 
