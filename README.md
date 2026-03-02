@@ -2,7 +2,7 @@
 ## 最新版本说明
 2026.03
 
-1.APP增加http代理功能，可分享vpn网络
+1.app增加http代理功能，可分享vpn网络
 
  说明：须安装build/yilianvpntunnel-release.apk, 并启动(要先启动易连vpn)
 
