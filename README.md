@@ -1,5 +1,11 @@
 # 西瓜vpn
 ## 最新版本说明
+2026.03
+
+1.APP增加http代理功能
+
+ 说明：须安装build/yilianvpntunnel-release.apk, 并启动
+
 2026.02
 
 1.修复内存管理bug(task多容器同步移除)
@@ -32,7 +38,7 @@ Dev-C++ IDE 编译运行
 
 # 如何安装客户端
 
-1.将build/xiguavpn-release.apk 拷贝到android手机上安装
+1.将build/yilianvpn-release.apk 拷贝到android手机上安装
 
 2.ip选项填服务器IP地址, port填服务器端口(4430), dns服务器地区dns
 
