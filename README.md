@@ -2,7 +2,7 @@
 ## 最新版本说明
 2026.03
 
-1.APP增加http代理功能，可分享vpn网络(好像vps对http代理流量有劫持)，后期封包把服务器放vps
+1.APP增加http代理功能，可分享vpn网络(待测试)
 
  说明：须安装build/yilianvpntunnel-release.apk, 并启动
 
